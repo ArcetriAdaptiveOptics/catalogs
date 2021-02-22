@@ -19,13 +19,15 @@ def _convert_mag(mag_str):
     return float(mag_str.split()[0])   
 
 
-def query(center_radec, radius_arcsec, catalog_dir=None, exefile=None, max=None, mag={}):
+def query(ra, dec, radius_arcsec, catalog_dir=None, exefile=None, max=None, mag={}):
     '''Query the GSC23 catalog
 
     Parameters
     ----------
-    center_radec: string
-        RA, Dec coordinates in HHMMSS+/-ddmmss. Example: 102030+123456
+    ra: float
+        Right Ascension angle in degrees
+    dec: float
+        Declination angle in degrees
     radius_arcsec: float
         search radius in arcsec
     max: int, optional
@@ -42,12 +44,17 @@ def query(center_radec, radius_arcsec, catalog_dir=None, exefile=None, max=None,
     catalog_dir = catalog_dir or gsc23_dir
     max = max or 1000
 
+    if dec>=0:
+       radec = '%f+%f' % (ra, dec)
+    else:
+       radec = '%f%f' % (ra, dec)
+
     args = []
     args.append(exefile)
     args.append('-R')
     args.append(catalog_dir)
     args.append('-c')
-    args.append(center_radec)
+    args.append(radec)
     args.append('-rs')
     args.append(str(radius_arcsec))
     args.append('-m')
