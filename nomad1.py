@@ -10,7 +10,7 @@ from collections import namedtuple
 from catalog_conf import nomad1_exe, nomad1_dir
 
 
-NOMAD1Star = namedtuple('NOMAD1Star', 'radec bmag vmag rmag jmag hmag kmag R')
+NOMAD1Star = namedtuple('NOMAD1Star', 'id radec bmag vmag rmag jmag hmag kmag R')
 
 def _convert_mag(mag_str):
     if '---' in mag_str:
@@ -75,7 +75,7 @@ def query(ra, dec, radius_arcsec, catalog_dir=None, exefile=None, max=None, mag=
         if len(line) < 1 or line[0] == '#':
             continue
 
-        _, _, coords, _, _, bvr, jhk, R, _ = line.split('|')
+        nomad1_id, _, coords, _, _, bvr, jhk, R, _ = line.split('|')
         Bmag, Vmag, Rmag = bvr.split()
         Jmag, Hmag, Kmag = jhk.split()
 
@@ -93,7 +93,7 @@ def query(ra, dec, radius_arcsec, catalog_dir=None, exefile=None, max=None, mag=
         else:
             R = None
 
-        stars.append(NOMAD1Star(radec, Bmag, Vmag, Rmag, Jmag, Hmag, Kmag,R))
+        stars.append(NOMAD1Star(nomad1_id, radec, Bmag, Vmag, Rmag, Jmag, Hmag, Kmag,R))
 
     return stars
 
