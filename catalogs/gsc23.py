@@ -1,26 +1,26 @@
 #!/usr/bin/env python
 '''
-Module to query a local copy of the NOMAD1 catalog
+Module to query a local copy of the GSC2.3 catalog
+
+A. Puglisi, Feb 2021
 '''
 
-import re
 import subprocess
 from collections import namedtuple
 
-from catalog_conf import nomad1_exe, nomad1_dir
+from catalogs.catalog_conf import gsc23_exe, gsc23_dir
 
 
-NOMAD1Star = namedtuple('NOMAD1Star', 'id radec bmag vmag rmag jmag hmag kmag R')
+GSC23Star = namedtuple('GSC23Star', 'radec fmag jmag vmag nmag umag bmag R')
 
 def _convert_mag(mag_str):
     if '---' in mag_str:
         return None
-    m = re.match('([\d\.]+)', mag_str)
-    return float(m.groups()[0])
-    
+    return float(mag_str.split()[0])   
+
 
 def query(ra, dec, radius_arcsec, catalog_dir=None, exefile=None, max=None, mag={}):
-    '''Query the NOMAD1 catalog
+    '''Query the GSC23 catalog
 
     Parameters
     ----------
@@ -36,12 +36,12 @@ def query(ra, dec, radius_arcsec, catalog_dir=None, exefile=None, max=None, mag=
         magnitude min,max limits. Example: {'R':(10,15), 'V':(12, 17)}
 
     catalog_dir: string, optional
-        directory with NOMAD1 data files
+        directory with GSC23 data files
     exefile: string, optional
-        NOMAD1 search program
+        GSC23 search program
     '''
-    exefile = exefile or nomad1_exe
-    catalog_dir = catalog_dir or nomad1_dir
+    exefile = exefile or gsc23_exe
+    catalog_dir = catalog_dir or gsc23_dir
     max = max or 1000
 
     if dec>=0:
@@ -61,10 +61,10 @@ def query(ra, dec, radius_arcsec, catalog_dir=None, exefile=None, max=None, mag=
     args.append(str(max))
 
     for m in mag:
-        if m not in list('BVRJHK'):
-            raise ValueError('Magnitude band %s not available in NOMAD1 catalog' % m)
+        if m not in list('JVFNUB'):
+            raise ValueError('Magnitude band %s not available in GSC catalog' % m)
         min, max = mag[m]
-        args.append('-lc%s' % m)
+        args.append('-l%s' % m)
         args.append('%f,%f' % (min, max))
 
     result = subprocess.check_output(args)
@@ -74,26 +74,18 @@ def query(ra, dec, radius_arcsec, catalog_dir=None, exefile=None, max=None, mag=
     for line in result.split('\n'):
         if len(line) < 1 or line[0] == '#':
             continue
-
-        nomad1_id, _, coords, _, _, bvr, jhk, R, _ = line.split('|')
-        Bmag, Vmag, Rmag = bvr.split()
-        Jmag, Hmag, Kmag = jhk.split()
+        num, coords, Fmag, Jmag, Vmag, Nmag, Umag, Bmag, Cl, Size, R = line.split('|')
 
         radec = coords.split()[0]
-        Bmag = _convert_mag(Bmag)
-        Vmag = _convert_mag(Vmag)
-        Rmag = _convert_mag(Rmag)
+        Fmag = _convert_mag(Fmag)
         Jmag = _convert_mag(Jmag)
-        Hmag = _convert_mag(Hmag)
-        Kmag = _convert_mag(Kmag)
-        R = R.strip()
-        if R:
-            print('R:', R)
-            R = float(R) 
-        else:
-            R = None
+        Vmag = _convert_mag(Vmag)
+        Nmag = _convert_mag(Nmag)
+        Umag = _convert_mag(Umag)
+        Bmag = _convert_mag(Bmag)
+        R = float(R[1:]) 
 
-        stars.append(NOMAD1Star(nomad1_id, radec, Bmag, Vmag, Rmag, Jmag, Hmag, Kmag,R))
+        stars.append(GSC23Star(radec, Fmag, Jmag, Vmag, Nmag, Umag, Bmag, R))
 
     return stars
 
