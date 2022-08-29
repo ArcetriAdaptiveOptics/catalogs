@@ -51,7 +51,11 @@ def query(ra, dec, radius_arcsec, catalog_table='gaiadr3.gaia_source', max=None,
         Bmag = line['phot_bp_mean_mag']
         Rmag = line['phot_rp_mean_mag']
 
-        radec = '%011.8f%011.8f' % (ra, dec)
+        sign = '+'
+        if dec < 0:
+            sign = '-'
+            dec *= -1
+        radec = '%011.8f%s%011.8f' % (ra, sign, dec)
         for m in mag:
             if m == 'B':
                 mag_min = mag[m][0]
